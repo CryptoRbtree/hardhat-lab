@@ -39,6 +39,8 @@ const {
             const execRole = "0xd8aa0f3194971a2a116679f7c2090f6939c8d4e01a2a8d7e41d55e5351469e63";
             timelock.grantRole(propRole, governor.address);
             timelock.grantRole(execRole, governor.address);
+            //timelock.grantRole(propRole, account1.address);
+            timelock.grantRole(execRole, account1.address);
 
             await owner.sendTransaction({
                 to: timelock.address,
@@ -81,11 +83,14 @@ const {
             expect(await governor.state(proposalId)).to.equal(Succeeded);
 
             const descriptionHash = "0xb99d781745dfccec23640714f21d53aaef1046b164da178660f58812e09332b0";
+            const predecessor = "0x0000000000000000000000000000000000000000000000000000000000000000";
 
+            //await expect(timelock.connect(account1).scheduleBatch([account1.address], [ethers.utils.parseEther("0.88")], [[]], predecessor, descriptionHash, 0)).to.emit(timelock, "CallScheduled");
             await expect(governor["queue(address[],uint256[],bytes[],bytes32)"]([account1.address], [ethers.utils.parseEther("0.88")], [[]], descriptionHash)).to.emit(governor, "ProposalQueued");
             expect(await governor.state(proposalId)).to.equal(Queued);
 
-            await expect(governor["execute(address[],uint256[],bytes[],bytes32)"]([account1.address], [ethers.utils.parseEther("0.88")], [[]], descriptionHash)).to.emit(governor, "ProposalExecuted");
+            await expect(timelock.connect(account1).executeBatch([account1.address], [ethers.utils.parseEther("0.88")], [[]], predecessor, descriptionHash)).to.emit(timelock, "CallExecuted");
+            //await expect(governor["execute(address[],uint256[],bytes[],bytes32)"]([account1.address], [ethers.utils.parseEther("0.88")], [[]], descriptionHash)).to.emit(governor, "ProposalExecuted");
             expect(await governor.state(proposalId)).to.equal(Executed);
 
         });

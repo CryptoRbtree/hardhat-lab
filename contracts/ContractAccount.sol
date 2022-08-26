@@ -5,9 +5,10 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC1820Implementer.sol";
 import "./ERC1820Registry.sol";
 
-contract ContractAccount is IERC777Recipient, IERC721Receiver, IERC1155Receiver {
+contract ContractAccount is IERC777Recipient, IERC721Receiver, IERC1155Receiver, ERC1820Implementer {
     event Receive(address, uint256);
     event Fallback(address, uint256);
     event TokensReceived(address, address, address, uint256, bytes, bytes);

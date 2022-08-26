@@ -64,7 +64,7 @@ const {
       // Contracts are deployed using the first signer/account by default
       const [owner, account1, account2] = await ethers.getSigners();
   
-      const Token = await ethers.getContractFactory("GLDToken");
+      const Token = await ethers.getContractFactory("RariToken");
       const token = await Token.deploy(1000);
   
       return { token, owner, account1, account2};
@@ -77,24 +77,24 @@ const {
         });
         it("Should transfer unsuccessfully", async function () {
             const { token, owner, account1} = await loadFixture(deploy);
-            await expect(token.transfer(account1.address, 2000)).to.be.revertedWith("ERC20: transfer amount exceeds balance");
+            await expect(token.transfer(account1.address, 2000)).to.be.revertedWithPanic(0x11);
         });
     });
 
     describe("Token TransferFrom", function () {
         it("Should transfer successfully", async function () {
             const { token, owner, account1, account2} = await loadFixture(deploy);
-            await expect(token.connect(account1).transferFrom(owner.address, account2.address, 1000)).to.be.revertedWith("ERC20: insufficient allowance");
+            await expect(token.connect(account1).transferFrom(owner.address, account2.address, 1000)).to.be.revertedWithPanic(0x11);
             await expect(token.approve(account1.address, 1000)).to.emit(token, "Approval");
             await expect(token.connect(account1).transferFrom(owner.address, account2.address, 1000)).to.emit(token, "Transfer");
-            await expect(token.connect(account1).transferFrom(owner.address, account2.address, 1000)).to.be.revertedWith("ERC20: insufficient allowance");
+            await expect(token.connect(account1).transferFrom(owner.address, account2.address, 1000)).to.be.revertedWithPanic(0x11);
         });
     });
 
     describe("Token TransferFrom with permit", function () {
         it("Should transfer successfully", async function () {
             const { token, owner, account1, account2} = await loadFixture(deploy);
-            await expect(token.connect(account1).transferFrom(owner.address, account2.address, 1000)).to.be.revertedWith("ERC20: insufficient allowance");
+            await expect(token.connect(account1).transferFrom(owner.address, account2.address, 1000)).to.be.revertedWithPanic(0x11);
 
             const { v, r, s } = await getPermitSignature(
                 owner,
