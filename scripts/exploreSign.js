@@ -81,21 +81,59 @@ async function signTypedData02(signer, nonce, name, version, chainId, token, spe
     return signature;
 }
 
+async function getTransactionSignature01(transaction, signer) {
+    let tx = await signer.sendTransaction(transaction);
+    return tx;
+}
+
+async function getTransactionSignature02(transaction) {
+    let serializedTransaction = await ethers.utils.serializeTransaction(transaction);
+    const hash = ethers.utils.keccak256(serializedTransaction);
+    const privateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"; // 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+    const signingKey = new ethers.utils.SigningKey(privateKey);
+    const signature = await signingKey.signDigest(hash);
+    return signature;
+}
+
+
 async function main() {
     const [signer] = await ethers.getSigners(); // 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+    const chainId = await signer.getChainId();
+
+    // 1. EIP712
+    console.log("1.EIP712");
     const nonce = 0;
     const name = "Gold";
     const version = "1";
-    const chainId = 31337;
     const token = "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1";
     const spender = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
     const value = 1000;
     const deadline = ethers.constants.MaxUint256;
 
-    const hash01 = await signTypedData01(signer, nonce, name, version, chainId, token, spender, value, deadline);
-    const hash02 = await signTypedData02(signer, nonce, name, version, chainId, token, spender, value, deadline);
-    console.log("hash01 = ", hash01);
-    console.log("hash02 = ", hash02);
+    const sigature01 = await signTypedData01(signer, nonce, name, version, chainId, token, spender, value, deadline);
+    const sigature02 = await signTypedData02(signer, nonce, name, version, chainId, token, spender, value, deadline);
+    console.log("signature01 = ", sigature01);
+    console.log("signature02 = ", sigature02);
+
+    // 2. transaction signature
+    console.log("\n2.transaction signature");
+    let transactionNonce = await signer.getTransactionCount();
+    let transaction = {
+        to: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
+        value: ethers.utils.parseEther('1'),
+        data: '0xE0A293E08F72454CEd99E1769c3ebd21fD2C20a1',
+        gasLimit: '22000',
+        maxFeePerGas: ethers.utils.parseUnits('20', 'gwei'),
+        maxPriorityFeePerGas: ethers.utils.parseUnits('5', 'gwei'),
+        nonce: transactionNonce,
+        type: 2,
+        chainId: chainId
+    };
+
+    const transactionSignature01 = await getTransactionSignature01(transaction, signer);
+    const transactionSignature02 = await getTransactionSignature02(transaction);
+    console.log("transactionSignature01 = ", transactionSignature01);
+    console.log("transactionSignature02 = ", transactionSignature02);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
