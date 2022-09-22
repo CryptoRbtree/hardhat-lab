@@ -95,6 +95,41 @@ async function getTransactionSignature02(transaction) {
     return signature;
 }
 
+async function getPersonalSignature01(message, signer) {
+    let messageBytes = ethers.utils.toUtf8Bytes(message);
+    const sig = await signer.signMessage(messageBytes);
+    return sig;
+}
+
+async function getPersonalSignature02(message) {
+    const privateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"; // 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+    const signingKey = new ethers.utils.SigningKey(privateKey);
+
+    const prefix = "\x19Ethereum Signed Message:\n";
+    const len = ethers.BigNumber.from(message.length).toString();
+    const hash = ethers.utils.keccak256(ethers.utils.solidityPack(
+        ["string", "string", "string"],
+        [prefix, len, message]));
+    const sig = await signingKey.signDigest(hash);
+    return sig;
+}
+
+async function getPersonalHashSignature01(messageHash, signer) {
+    const sig = await signer.signMessage(ethers.utils.arrayify(messageHash));
+    return sig;
+}
+
+async function getPersonalHashSignature02(messageHash) {
+    const privateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"; // 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+    const signingKey = new ethers.utils.SigningKey(privateKey);
+
+    const prefix = "\x19Ethereum Signed Message:\n32";
+    const hash = ethers.utils.keccak256(ethers.utils.solidityPack(
+        ["string", "bytes32"],
+        [prefix, messageHash]));
+    const sig = await signingKey.signDigest(hash);
+    return sig;
+}
 
 async function main() {
     const [signer] = await ethers.getSigners(); // 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
@@ -134,6 +169,23 @@ async function main() {
     const transactionSignature02 = await getTransactionSignature02(transaction);
     console.log("transactionSignature01 = ", transactionSignature01);
     console.log("transactionSignature02 = ", transactionSignature02);
+
+    // 3. personal signature
+    console.log("\n3.personal signature");
+    const message = "I will pay Bob 1 ETH.";
+    const personalSignature01 = await getPersonalSignature01(message, signer);
+    const personalSignature02 = await getPersonalSignature02(message);
+    console.log("personal signature01 = ", personalSignature01);
+    console.log("personal signature02 = ", personalSignature02);
+
+    // 4. personal hash signature
+    console.log("\n4.personal hash signature");
+    //const messageHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("I will pay Bob 1 ETH."));
+    const messageHash = "0x22658f1dab0720e8bf599551cc6dd75230ed4efefc7f6694f0b389e0807a0e52";
+    const personalHashSignature01 = await getPersonalHashSignature01(messageHash, signer);
+    const personalHashSignature02 = await getPersonalHashSignature02(messageHash);
+    console.log("personal signature01 = ", personalHashSignature01);
+    console.log("personal signature02 = ", personalHashSignature02);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
